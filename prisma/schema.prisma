@@ -1,0 +1,491 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum MovieStatus {
+  PLANNED
+  WATCHING
+  WATCHED
+  DROPPED
+}
+
+enum SeriesStatus {
+  PLANNED
+  WATCHING
+  WATCHED
+  DROPPED
+}
+
+enum ReadingType {
+  BOOK
+  ARTICLE
+  PAPER
+  BLOG
+  DOCUMENTATION
+  OTHER
+}
+
+enum ReadingStatus {
+  PLANNED
+  READING
+  COMPLETED
+  DROPPED
+}
+
+enum StudyType {
+  COURSE
+  TECHNOLOGY
+  SKILL
+  TOPIC
+  CERTIFICATION
+  BOOK
+  TUTORIAL
+  OTHER
+}
+
+enum StudyStatus {
+  PLANNED
+  LEARNING
+  COMPLETED
+  DROPPED
+}
+
+enum TravelStatus {
+  WANT_TO_VISIT
+  PLANNING
+  VISITED
+}
+
+enum TripStatus {
+  PLANNING
+  BOOKED
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+enum PlanType {
+  MOVIE
+  SERIES_EPISODE
+  READING
+  STUDY
+  TRAVEL
+  OTHER
+}
+
+enum PlanStatus {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  username     String   @unique
+  passwordHash String
+  displayName  String?
+  avatarUrl    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  cloudStorageConfig CloudStorageConfig?
+  mediaAssets        MediaAsset[]
+  movies             Movie[]
+  series             Series[]
+  readingItems       ReadingItem[]
+  studyItems         StudyItem[]
+  travelPlaces       TravelPlace[]
+  trips              Trip[]
+  plans              Plan[]
+  tags               Tag[]
+
+  @@index([email])
+  @@index([username])
+}
+
+model CloudStorageConfig {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider           String   @default("CLOUDINARY")
+  cloudName          String
+  apiKeyMasked       String
+  encryptedApiKey    String
+  encryptedApiSecret String
+  iv                 String
+  authTag            String
+  isConfigured       Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model MediaAsset {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  type      String
+  provider  String
+  publicId  String
+  url       String
+  secureUrl String
+  metadata  Json?
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  movies       Movie[]
+  series       Series[]
+  readingItems ReadingItem[]
+  studyItems   StudyItem[]
+  travelPlaces TravelPlace[]
+  trips        Trip[]
+
+  @@index([userId])
+  @@index([isDefault])
+}
+
+model Tag {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  color     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  movieTags       MovieTag[]
+  seriesTags      SeriesTag[]
+  readingTags     ReadingTag[]
+  studyTags       StudyTag[]
+  travelPlaceTags TravelPlaceTag[]
+  planTags        PlanTag[]
+
+  @@unique([userId, name])
+  @@index([userId])
+}
+
+model Movie {
+  id           String      @id @default(cuid())
+  userId       String
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title        String
+  description  String?
+  releaseYear  Int?
+  language     String?
+  duration     Int?
+  director     String?
+  cast         String?
+  rating       Float?
+  status       MovieStatus @default(PLANNED)
+  priority     Priority    @default(MEDIUM)
+  genre        String?
+  notes        String?
+  mediaAssetId String?
+  mediaAsset   MediaAsset? @relation(fields: [mediaAssetId], references: [id], onDelete: SetNull)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  tags MovieTag[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([priority])
+  @@index([title])
+  @@index([createdAt])
+}
+
+model MovieTag {
+  movieId String
+  tagId   String
+  movie   Movie  @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  tag     Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([movieId, tagId])
+}
+
+model Series {
+  id           String       @id @default(cuid())
+  userId       String
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title        String
+  description  String?
+  releaseYear  Int?
+  language     String?
+  genre        String?
+  rating       Float?
+  status       SeriesStatus @default(PLANNED)
+  priority     Priority     @default(MEDIUM)
+  notes        String?
+  mediaAssetId String?
+  mediaAsset   MediaAsset?  @relation(fields: [mediaAssetId], references: [id], onDelete: SetNull)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  seasons Season[]
+  tags    SeriesTag[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([priority])
+  @@index([title])
+  @@index([createdAt])
+}
+
+model SeriesTag {
+  seriesId String
+  tagId    String
+  series   Series @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  tag      Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([seriesId, tagId])
+}
+
+model Season {
+  id           String   @id @default(cuid())
+  seriesId     String
+  series       Series   @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  seasonNumber Int
+  title        String?
+  description  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  episodes Episode[]
+
+  @@unique([seriesId, seasonNumber])
+  @@index([seriesId])
+}
+
+model Episode {
+  id            String    @id @default(cuid())
+  seasonId      String
+  season        Season    @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  episodeNumber Int
+  title         String?
+  description   String?
+  duration      Int?
+  watched       Boolean   @default(false)
+  watchedAt     DateTime?
+  note          String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([seasonId, episodeNumber])
+  @@index([seasonId])
+  @@index([watched])
+}
+
+model ReadingItem {
+  id           String        @id @default(cuid())
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title        String
+  description  String?
+  author       String?
+  type         ReadingType   @default(BOOK)
+  status       ReadingStatus @default(PLANNED)
+  progress     Int           @default(0)
+  totalPages   Int?
+  currentPage  Int?
+  rating       Float?
+  priority     Priority      @default(MEDIUM)
+  notes        String?
+  mediaAssetId String?
+  mediaAsset   MediaAsset?   @relation(fields: [mediaAssetId], references: [id], onDelete: SetNull)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  tags ReadingTag[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([type])
+  @@index([priority])
+  @@index([title])
+  @@index([createdAt])
+}
+
+model ReadingTag {
+  readingItemId String
+  tagId         String
+  readingItem   ReadingItem @relation(fields: [readingItemId], references: [id], onDelete: Cascade)
+  tag           Tag         @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([readingItemId, tagId])
+}
+
+model StudyItem {
+  id           String      @id @default(cuid())
+  userId       String
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title        String
+  description  String?
+  type         StudyType   @default(COURSE)
+  status       StudyStatus @default(PLANNED)
+  progress     Int         @default(0)
+  priority     Priority    @default(MEDIUM)
+  targetDate   DateTime?
+  notes        String?
+  mediaAssetId String?
+  mediaAsset   MediaAsset? @relation(fields: [mediaAssetId], references: [id], onDelete: SetNull)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  resources StudyResource[]
+  tags      StudyTag[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([type])
+  @@index([priority])
+  @@index([title])
+  @@index([createdAt])
+}
+
+model StudyResource {
+  id          String    @id @default(cuid())
+  studyItemId String
+  studyItem   StudyItem @relation(fields: [studyItemId], references: [id], onDelete: Cascade)
+  title       String
+  url         String?
+  type        String?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([studyItemId])
+}
+
+model StudyTag {
+  studyItemId String
+  tagId       String
+  studyItem   StudyItem @relation(fields: [studyItemId], references: [id], onDelete: Cascade)
+  tag         Tag       @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([studyItemId, tagId])
+}
+
+model TravelPlace {
+  id              String       @id @default(cuid())
+  userId          String
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name            String
+  country         String?
+  state           String?
+  city            String?
+  description     String?
+  priority        Priority     @default(MEDIUM)
+  status          TravelStatus @default(WANT_TO_VISIT)
+  estimatedBudget Float?
+  targetDate      DateTime?
+  notes           String?
+  mediaAssetId    String?
+  mediaAsset      MediaAsset?  @relation(fields: [mediaAssetId], references: [id], onDelete: SetNull)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  tripPlaces TripPlace[]
+  tags       TravelPlaceTag[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([priority])
+  @@index([name])
+  @@index([createdAt])
+}
+
+model TravelPlaceTag {
+  placeId String
+  tagId   String
+  place   TravelPlace @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  tag     Tag         @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([placeId, tagId])
+}
+
+model Trip {
+  id           String      @id @default(cuid())
+  userId       String
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  description  String?
+  startDate    DateTime?
+  endDate      DateTime?
+  budget       Float?
+  status       TripStatus  @default(PLANNING)
+  notes        String?
+  mediaAssetId String?
+  mediaAsset   MediaAsset? @relation(fields: [mediaAssetId], references: [id], onDelete: SetNull)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  tripPlaces TripPlace[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model TripPlace {
+  id        String      @id @default(cuid())
+  tripId    String
+  trip      Trip        @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  placeId   String
+  place     TravelPlace @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  order     Int         @default(0)
+  notes     String?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@unique([tripId, placeId])
+  @@index([tripId])
+}
+
+model Plan {
+  id            String     @id @default(cuid())
+  userId        String
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?
+  type          PlanType   @default(OTHER)
+  scheduledDate DateTime?
+  priority      Priority   @default(MEDIUM)
+  status        PlanStatus @default(PLANNED)
+  notes         String?
+  referenceId   String?
+  referenceType String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  tags PlanTag[]
+
+  @@index([userId])
+  @@index([scheduledDate])
+  @@index([status])
+  @@index([type])
+  @@index([priority])
+  @@index([createdAt])
+}
+
+model PlanTag {
+  planId String
+  tagId  String
+  plan   Plan   @relation(fields: [planId], references: [id], onDelete: Cascade)
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([planId, tagId])
+}
