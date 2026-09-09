@@ -31,6 +31,7 @@ export function createApp(): Express {
   const app = express();
 
   // Trust reverse proxy headers (e.g. Render, Heroku, Nginx, Cloudflare)
+  app.set('etag', false)
   app.set('trust proxy', 1);
 
   // Security middlewares

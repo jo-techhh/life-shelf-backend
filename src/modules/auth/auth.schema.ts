@@ -16,10 +16,16 @@ export const registerSchema = z.object({
   displayName: z.string().min(1).max(50).optional(),
 });
 
-export const loginSchema = z.object({
-  identifier: z.string().min(1, 'Email or username is required'),
-  password: z.string().min(1, 'Password is required'),
-});
+export const loginSchema = z
+  .object({
+    identifier: z.string().optional(),
+    emailOrUsername: z.string().optional(),
+    password: z.string().min(1, 'Password is required'),
+  })
+  .refine((data) => !!(data.identifier?.trim() || data.emailOrUsername?.trim()), {
+    message: 'Email or username is required',
+    path: ['identifier'],
+  });
 
 export const changePasswordSchema = z.object({
   currentPassword: z.string().min(1, 'Current password is required'),

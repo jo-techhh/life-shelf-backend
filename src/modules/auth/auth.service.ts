@@ -66,7 +66,11 @@ export class AuthService {
   }
 
   public static async login(input: LoginInput) {
-    const identifier = input.identifier.toLowerCase();
+    const rawIdentifier = input.identifier || input.emailOrUsername;
+    if (!rawIdentifier) {
+      throw new BadRequestError('Email or username is required');
+    }
+    const identifier = rawIdentifier.trim().toLowerCase();
     const user = await prisma.user.findFirst({
       where: {
         OR: [{ email: identifier }, { username: identifier }],

@@ -29,7 +29,12 @@ export class AuthController {
   public static async getMe(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const user = await AuthService.getCurrentUser(req.user!.id);
-      ApiResponse.success(res, user);
+      const isConfigured = !!user.cloudStorageConfig?.isConfigured;
+      ApiResponse.success(res, {
+        ...user,
+        user,
+        cloudStorageConfigured: isConfigured,
+      });
     } catch (error) {
       next(error);
     }
