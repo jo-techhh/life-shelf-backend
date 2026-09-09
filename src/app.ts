@@ -30,6 +30,9 @@ import dashboardRoutes from './modules/dashboard/dashboard.routes.js';
 export function createApp(): Express {
   const app = express();
 
+  // Trust reverse proxy headers (e.g. Render, Heroku, Nginx, Cloudflare)
+  app.set('trust proxy', 1);
+
   // Security middlewares
   app.use(helmet());
   app.use(
