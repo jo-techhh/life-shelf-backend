@@ -12,11 +12,15 @@ const server = app.listen(env.PORT, () => {
 
 server.on('error', (err: NodeJS.ErrnoException) => {
   if (err.code === 'EACCES') {
+    console.error(`❌ Port ${env.PORT} requires elevated permissions or is excluded by Windows NAT/Hyper-V.`);
+    console.error(`Please specify a different PORT in your .env file (e.g. PORT=8000).`);
     logger.error(`Port ${env.PORT} requires elevated permissions or is excluded by Windows NAT/Hyper-V.`);
-    logger.error(`Please specify a different PORT in your .env file (e.g. PORT=5050 or PORT=8000).`);
+    logger.error(`Please specify a different PORT in your .env file (e.g. PORT=8000).`);
   } else if (err.code === 'EADDRINUSE') {
+    console.error(`❌ Port ${env.PORT} is already in use by another process. Please choose a different port in .env.`);
     logger.error(`Port ${env.PORT} is already in use by another process. Please choose a different port in .env.`);
   } else {
+    console.error(`❌ Failed to start server: ${err.message}`);
     logger.error(`Failed to start server: ${err.message}`);
   }
   process.exit(1);
