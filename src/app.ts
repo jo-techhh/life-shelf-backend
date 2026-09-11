@@ -1,11 +1,10 @@
 import express, { Express, Request, Response } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
-import morgan from 'morgan';
+import { httpLoggerMiddleware } from './middleware/http-logger.middleware.js';
 import swaggerUi from 'swagger-ui-express';
 
 import { env } from './config/env.js';
-import { logger } from './config/logger.js';
 import { swaggerSpec } from './config/swagger.js';
 import { requestIdMiddleware } from './middleware/request-id.middleware.js';
 import { errorMiddleware } from './middleware/error.middleware.js';
@@ -52,19 +51,8 @@ export function createApp(): Express {
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-  // HTTP Request Logging
-  if (env.NODE_ENV !== 'test') {
-    app.use(
-      morgan(
-        ':method :url :status :res[content-length] - :response-time ms (reqId: :req[x-request-id])',
-        {
-          stream: {
-            write: (message: string) => logger.info(message.trim()),
-          },
-        },
-      ),
-    );
-  }
+  // HTTP Request Logging (FastAPI & Django style)
+  app.use(httpLoggerMiddleware);
 
   // Rate Limiter
   app.use('/api', generalLimiter);
