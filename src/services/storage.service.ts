@@ -113,6 +113,10 @@ export class StorageService {
       throw new BadRequestError('Cannot delete system default media asset');
     }
 
+    if (asset.isCatalog) {
+      throw new BadRequestError('Cannot delete curated catalog media asset');
+    }
+
     try {
       const provider = await this.getProviderForUser(userId);
       await provider.delete(asset.publicId);

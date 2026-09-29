@@ -10,7 +10,7 @@ export class MovieService {
     const asset = await prisma.mediaAsset.findFirst({
       where: {
         id: mediaAssetId,
-        OR: [{ userId }, { isDefault: true }],
+        OR: [{ userId }, { isDefault: true }, { isCatalog: true }],
       },
     });
     if (!asset) {

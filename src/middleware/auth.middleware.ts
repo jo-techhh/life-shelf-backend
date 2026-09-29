@@ -1,11 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env.js';
-import { UnauthorizedError } from '../common/errors/app-error.js';
+import { UnauthorizedError, ForbiddenError } from '../common/errors/app-error.js';
 import { prisma } from '../config/database.js';
 
 interface JwtPayload {
   userId: string;
+  role?: 'USER' | 'ADMIN';
   iat: number;
   exp: number;
 }
@@ -40,6 +41,7 @@ export async function authMiddleware(
         id: true,
         email: true,
         username: true,
+        role: true,
       },
     });
 
@@ -53,3 +55,17 @@ export async function authMiddleware(
     next(error);
   }
 }
+
+export function requireRole(...allowedRoles: Array<'USER' | 'ADMIN'>) {
+  return (req: Request, _res: Response, next: NextFunction): void => {
+    if (!req.user) {
+      return next(new UnauthorizedError('Authentication required'));
+    }
+    if (!allowedRoles.includes(req.user.role)) {
+      return next(new ForbiddenError('Access forbidden: insufficient permissions'));
+    }
+    next();
+  };
+}
+
+export const requireAdmin = requireRole('ADMIN');

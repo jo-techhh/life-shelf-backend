@@ -16,8 +16,8 @@ import {
 } from '../../common/errors/app-error.js';
 
 export class AuthService {
-  private static generateToken(userId: string): string {
-    return jwt.sign({ userId }, env.JWT_SECRET, {
+  private static generateToken(userId: string, role = 'USER'): string {
+    return jwt.sign({ userId, role }, env.JWT_SECRET, {
       expiresIn: env.JWT_EXPIRES_IN,
     } as jwt.SignOptions);
   }
@@ -52,12 +52,13 @@ export class AuthService {
         username: true,
         displayName: true,
         avatarUrl: true,
+        role: true,
         createdAt: true,
         updatedAt: true,
       },
     });
 
-    const token = this.generateToken(user.id);
+    const token = this.generateToken(user.id, (user as any).role || 'USER');
 
     return {
       user,
@@ -86,7 +87,7 @@ export class AuthService {
       throw new UnauthorizedError('Invalid credentials');
     }
 
-    const token = this.generateToken(user.id);
+    const token = this.generateToken(user.id, (user as any).role || 'USER');
 
     return {
       user: {
@@ -95,6 +96,7 @@ export class AuthService {
         username: user.username,
         displayName: user.displayName,
         avatarUrl: user.avatarUrl,
+        role: (user as any).role || 'USER',
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       },
@@ -111,6 +113,7 @@ export class AuthService {
         username: true,
         displayName: true,
         avatarUrl: true,
+        role: true,
         createdAt: true,
         updatedAt: true,
         cloudStorageConfig: {
@@ -174,6 +177,7 @@ export class AuthService {
         username: true,
         displayName: true,
         avatarUrl: true,
+        role: true,
         createdAt: true,
         updatedAt: true,
       },

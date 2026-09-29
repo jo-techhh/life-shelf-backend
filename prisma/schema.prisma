@@ -92,6 +92,11 @@ enum PlanStatus {
   CANCELLED
 }
 
+enum Role {
+  USER
+  ADMIN
+}
+
 model User {
   id           String   @id @default(cuid())
   email        String   @unique
@@ -99,6 +104,7 @@ model User {
   passwordHash String
   displayName  String?
   avatarUrl    String?
+  role         Role     @default(USER)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -113,6 +119,8 @@ model User {
   plans              Plan[]
   tags               Tag[]
   sharedWatchList    SharedWatchList?
+  catalogMovies      CatalogMovie[]
+  catalogBooks       CatalogBook[]
 
   @@index([email])
   @@index([username])
@@ -146,6 +154,7 @@ model MediaAsset {
   secureUrl String
   metadata  Json?
   isDefault Boolean  @default(false)
+  isCatalog Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -155,9 +164,12 @@ model MediaAsset {
   studyItems   StudyItem[]
   travelPlaces TravelPlace[]
   trips        Trip[]
+  catalogMovies CatalogMovie[]
+  catalogBooks  CatalogBook[]
 
   @@index([userId])
   @@index([isDefault])
+  @@index([isCatalog])
 }
 
 model Tag {
@@ -504,4 +516,46 @@ model SharedWatchList {
   updatedAt     DateTime @updatedAt
 
   @@index([shareToken])
+}
+
+model CatalogMovie {
+  id           String      @id @default(cuid())
+  createdById  String
+  createdBy    User        @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  title        String
+  description  String?
+  releaseYear  Int?
+  language     String?
+  duration     Int?
+  director     String?
+  cast         String?
+  genre        String?
+  mediaAssetId String?
+  mediaAsset   MediaAsset? @relation(fields: [mediaAssetId], references: [id], onDelete: SetNull)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([title])
+  @@index([genre])
+  @@index([releaseYear])
+}
+
+model CatalogBook {
+  id           String       @id @default(cuid())
+  createdById  String
+  createdBy    User         @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  title        String
+  description  String?
+  author       String?
+  type         ReadingType  @default(BOOK)
+  totalPages   Int?
+  genre        String?
+  mediaAssetId String?
+  mediaAsset   MediaAsset?  @relation(fields: [mediaAssetId], references: [id], onDelete: SetNull)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([title])
+  @@index([author])
+  @@index([type])
 }

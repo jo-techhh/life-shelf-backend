@@ -91,6 +91,7 @@ export class MediaController {
           secureUrl: d.secureUrl,
           metadata: d.metadata,
           isDefault: true,
+          isCatalog: true,
           createdAt: new Date(),
           updatedAt: new Date(),
         }));

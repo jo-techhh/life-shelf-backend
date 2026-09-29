@@ -26,6 +26,7 @@ import travelRoutes from './modules/travel/travel.routes.js';
 import plansRoutes from './modules/plans/plans.routes.js';
 import dashboardRoutes from './modules/dashboard/dashboard.routes.js';
 import shareRoutes from './modules/share/share.routes.js';
+import catalogRoutes from './modules/catalog/catalog.routes.js';
 import { ShareController } from './modules/share/share.controller.js';
 
 export function createApp(): Express {
@@ -91,6 +92,7 @@ export function createApp(): Express {
   app.use('/api/plans', plansRoutes);
   app.use('/api/dashboard', dashboardRoutes);
   app.use('/api/share', shareRoutes);
+  app.use('/api/catalog', catalogRoutes);
   app.get('/api/public/watch/:token', ShareController.getPublicWatchList);
 
   // 404 handler
